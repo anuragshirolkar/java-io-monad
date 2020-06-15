@@ -2,17 +2,18 @@ package io;
 
 import java.util.Scanner;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 public class Main {
 
     public static void main(String[] args) {
-        IO<?> mainIO = pureMain();
+        IO<Void> mainIO = pureMain();
         System.out.println("main io has been constructed.");
         mainIO.process();
     }
 
-    private static IO<?> pureMain() {
-        return (IO<?>) Input.readLine()
+    private static IO<Void> pureMain() {
+        return Input.readLine()
             .flatMap(Main::quotePrinter);
     }
 
@@ -22,8 +23,8 @@ public class Main {
     }
 
     private static IO<Integer> add(int a, int b) {
-        String log = String.format("adding two integers %s and %s = %s", a, b, a+b);
-        return Output.print(log, a+b);
+        String log = String.format("adding two integers %s and %s = %s", a, b, a + b);
+        return Output.print(log, a + b);
     }
 }
 
@@ -35,7 +36,7 @@ class Output<T> extends IO<T> {
         this.log = log;
         this.next = next;
     }
-    
+
     private Output(String log, T carry) {
         this(log, new ConstantIO<>(carry));
     }
@@ -54,12 +55,12 @@ class Output<T> extends IO<T> {
 
     @Override
     public <R> IO<R> flatMap(Function<T, Monad<R>> f) {
-        return new Output<>(log, (IO<R>)next.flatMap(f));
+        return new Output<>(log, (IO<R>) next.flatMap(f));
     }
 
     @Override
     public <R> IO<R> map(Function<T, R> f) {
-        return new Output<>(log, (IO<R>)next.map(f));
+        return new Output<>(log, (IO<R>) next.map(f));
     }
 
     @Override
@@ -71,7 +72,7 @@ class Output<T> extends IO<T> {
 
 class Input<T> extends IO<T> {
 
-    Function<String, IO<T>> inputProcessor;
+    private Function<String, IO<T>> inputProcessor;
 
     private Input(Function<String, IO<T>> f) {
         inputProcessor = f;
@@ -83,12 +84,12 @@ class Input<T> extends IO<T> {
 
     @Override
     public <R> Input<R> flatMap(Function<T, Monad<R>> f) {
-        return new Input<>(i -> (IO<R>)inputProcessor.apply(i).flatMap(f));
+        return new Input<>(i -> (IO<R>) inputProcessor.apply(i).flatMap(f));
     }
 
     @Override
     public <R> Input<R> map(Function<T, R> f) {
-        return new Input<>(i -> (IO<R>)inputProcessor.apply(i).map(f));
+        return new Input<>(i -> (IO<R>) inputProcessor.apply(i).map(f));
     }
 
     @Override
@@ -100,7 +101,7 @@ class Input<T> extends IO<T> {
     }
 }
 
-class ConstantIO<T> extends IO <T> {
+class ConstantIO<T> extends IO<T> {
 
     T value;
 
@@ -110,7 +111,7 @@ class ConstantIO<T> extends IO <T> {
 
     @Override
     public <R> IO<R> flatMap(Function<T, Monad<R>> f) {
-        return (IO<R>)f.apply(value);
+        return (IO<R>) f.apply(value);
     }
 
     @Override
@@ -122,7 +123,7 @@ class ConstantIO<T> extends IO <T> {
     T process() {
         return value;
     }
-    
+
 }
 
 abstract class IO<T> implements Monad<T>, Functor<T> {
@@ -131,11 +132,11 @@ abstract class IO<T> implements Monad<T>, Functor<T> {
 }
 
 interface Functor<T> {
-    
+
     public <R> Functor<R> map(Function<T, R> f);
 }
 
 interface Monad<T> {
-    
+
     public <R> Monad<R> flatMap(Function<T, Monad<R>> f);
 }
