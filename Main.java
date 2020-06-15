@@ -6,18 +6,14 @@ import java.util.function.Function;
 public class Main {
 
     public static void main(String[] args) {
-        IO<Void> mainIO = pureMain();
+        IO<?> mainIO = pureMain();
         System.out.println("main io has been constructed.");
         mainIO.process();
     }
 
-    private static IO<Void> pureMain() {
-       //return add(2,3);
-        return takeInput()
-            .flatMap(s -> {
-                return quotePrinter(s);
-            })
-            .map(r -> null);
+    private static IO<?> pureMain() {
+        return (IO<?>) takeInput()
+            .flatMap(Main::quotePrinter);
     }
 
     private static IO<String> takeInput() {
@@ -26,12 +22,12 @@ public class Main {
 
     private static IO<Integer> quotePrinter(String s) {
         String log = String.format("input was: %s", s);
-        return new Output<>(log, new ConstantIO(0));
+        return new Output<>(log, new ConstantIO<>(0));
     }
 
     private static IO<Integer> add(int a, int b) {
         String log = String.format("adding two integers %s and %s = %s", a, b, a+b);
-        return new Output<>(log, new ConstantIO(a+b));
+        return new Output<>(log, new ConstantIO<>(a+b));
     }
 }
 
@@ -45,7 +41,7 @@ class Output<T> extends IO<T> {
     }
 
     @Override
-    public <R> IO<R> flatMap(Function<T, IO<R>> f) {
+    public <R> IO<R> flatMap(Function<T, Monad<R>> f) {
         return new Output<>(log, (IO<R>)next.flatMap(f));
     }
 
@@ -70,7 +66,7 @@ class Input<T> extends IO<T> {
     }
 
     @Override
-    public <R> Input<R> flatMap(Function<T, IO<R>> f) {
+    public <R> Input<R> flatMap(Function<T, Monad<R>> f) {
         return new Input<>(i -> (IO<R>)inputProcessor.apply(i).flatMap(f));
     }
 
@@ -97,8 +93,8 @@ class ConstantIO<T> extends IO <T> {
     }
 
     @Override
-    public <R> IO<R> flatMap(Function<T, IO<R>> f) {
-        return f.apply(value);
+    public <R> IO<R> flatMap(Function<T, Monad<R>> f) {
+        return (IO<R>)f.apply(value);
     }
 
     @Override
@@ -113,13 +109,9 @@ class ConstantIO<T> extends IO <T> {
     
 }
 
-abstract class IO<T> {//implements Monad<T>, Functor<T> {
+abstract class IO<T> implements Monad<T>, Functor<T> {
 
     abstract T process();
-
-    abstract <R> IO<R> map(Function<T, R> f);
-
-    abstract <R> IO<R> flatMap(Function<T, IO<R>> f);
 }
 
 interface Functor<T> {
