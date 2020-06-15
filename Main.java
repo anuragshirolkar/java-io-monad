@@ -12,22 +12,18 @@ public class Main {
     }
 
     private static IO<?> pureMain() {
-        return (IO<?>) takeInput()
+        return (IO<?>) Input.readLine()
             .flatMap(Main::quotePrinter);
     }
 
-    private static IO<String> takeInput() {
-        return new Input<>(s -> new ConstantIO<>(s));
-    }
-
-    private static IO<Integer> quotePrinter(String s) {
+    private static IO<Void> quotePrinter(String s) {
         String log = String.format("input was: %s", s);
-        return new Output<>(log, new ConstantIO<>(0));
+        return Output.print(log);
     }
 
     private static IO<Integer> add(int a, int b) {
         String log = String.format("adding two integers %s and %s = %s", a, b, a+b);
-        return new Output<>(log, new ConstantIO<>(a+b));
+        return Output.print(log, a+b);
     }
 }
 
@@ -35,9 +31,25 @@ class Output<T> extends IO<T> {
     String log;
     IO<T> next;
 
-    Output(String log, IO<T> next) {
+    private Output(String log, IO<T> next) {
         this.log = log;
         this.next = next;
+    }
+    
+    private Output(String log, T carry) {
+        this(log, new ConstantIO<>(carry));
+    }
+
+    private Output(String log) {
+        this(log, (T) null);
+    }
+
+    static <T> Output<T> print(String log, T output) {
+        return new Output<>(log, output);
+    }
+
+    static Output<Void> print(String log) {
+        return new Output<>(log);
     }
 
     @Override
@@ -61,8 +73,12 @@ class Input<T> extends IO<T> {
 
     Function<String, IO<T>> inputProcessor;
 
-    Input(Function<String, IO<T>> f) {
+    private Input(Function<String, IO<T>> f) {
         inputProcessor = f;
+    }
+
+    static Input<String> readLine() {
+        return new Input<>(s -> new ConstantIO<>(s));
     }
 
     @Override
