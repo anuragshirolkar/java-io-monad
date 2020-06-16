@@ -2,7 +2,6 @@ package io;
 
 import java.util.Scanner;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 public class Main {
 
@@ -126,7 +125,7 @@ class ConstantIO<T> extends IO<T> {
 
 }
 
-abstract class IO<T> implements Monad<T>, Functor<T> {
+abstract class IO<T> implements Monad<T> {
 
     abstract T process();
 }
@@ -136,7 +135,7 @@ interface Functor<T> {
     public <R> Functor<R> map(Function<T, R> f);
 }
 
-interface Monad<T> {
+interface Monad<T> extends Functor<T> {
 
     public <R> Monad<R> flatMap(Function<T, Monad<R>> f);
 }
